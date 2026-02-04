@@ -1,91 +1,99 @@
-// components/Login.js
 "use client";
 
-import LoginForm from "@/components/LoginForm";
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
+
+type Step = "email" | "code";
 
 export default function Login() {
   const router = useRouter();
 
-  const [step, setStep] = useState<"email" | "code">("email");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [code, setCode] = useState("");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const sendOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
     });
 
-    setLoading(false)
+    setLoading(false);
 
     if (error) {
-      setError('No pudimos enviar el código. Por favor, inténtalo de nuevo.');
-      return
+      setError("No pudimos enviar el código. Intenta nuevamente.");
+      return;
     }
 
     setStep("code");
   };
-  
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+
+  const verifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: code,
-      type: 'email'
-    })
+      type: "email",
+    });
 
-    setLoading(false)
+    setLoading(false);
 
     if (error) {
-      setError('Código inválido o expirado');
-      return
+      setError("Código inválido o expirado.");
+      return;
     }
 
-    router.push('/');
-    console.log('Usuario autenticado');
-    
+    router.push("/");
   };
 
   return (
     <div>
-      {step === "email" && (
-      <form onSubmit={handleLogin}>
-        <input
-        type="text" 
-        required  
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Enviando...' : 'Enviar código'}
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
-      )}
-      {step === "code" && (
-      <form onSubmit={handleVerifyOtp}>
-        <input 
-        type="text"
-        placeholder="Codigo de 6 digitos"
-        value={code}
-        onChange={e => setCode(e.target.value)}
-        required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Verificando...' : 'Verificar código'}
-        </button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-      </form>
-      )}
-      </div>
+      <h2>Iniciar sesión</h2>
 
+      {step === "email" && (
+        <form onSubmit={sendOtp}>
+          <input
+            type="email"
+            placeholder="Ingresa tu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Enviando..." : "Enviar código"}
+          </button>
+
+          {error && <p style={{ color: "red" }}>{error}</p>}
+        </form>
+      )}
+
+      {step === "code" && (
+        <form onSubmit={verifyOtp}>
+          <input
+            type="text"
+            placeholder="Código de verificación"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+          />
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Verificando..." : "Verificar código"}
+          </button>
+
+          {error && <p style={{ color: "red" }}>{error}</p>}
+        </form>
+      )}
+    </div>
   );
 }
