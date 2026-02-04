@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../utils/supabase/client"; // Cambiar esta línea
+import { createClient } from "../utils/supabase/client";
 
 type Step = "email" | "code";
 
 export default function Login() {
   const router = useRouter();
-  const supabase = createClient(); // Crear instancia del cliente
+  const supabase = createClient();
 
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState<string>("");
