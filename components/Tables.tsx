@@ -171,12 +171,19 @@ export default function Tables({ required }: { required: string }) {
             : null}
       </button>
       {visibility ? (
-        <form onSubmit={createRow}>
-          <input name="number" placeholder="numero"></input>
-          <input name="name" placeholder="nombre" />
-          <input name="lastname" placeholder="apellido" />{" "}
-          <button type="submit">Crear</button>
-        </form>
+        required === "employees" ? (
+          <form onSubmit={createRow}>
+            <input name="number" placeholder="numero" />
+            <input name="name" placeholder="nombre" />
+            <input name="lastname" placeholder="apellido" />
+            <button type="submit">Crear</button>
+          </form>
+        ) : required === "crews" ? (
+          <form onSubmit={createRow}>
+            <input name="number" placeholder="numero" />
+            <button type="submit">Crear</button>
+          </form>
+        ) : null
       ) : null}
     </div>
   );
