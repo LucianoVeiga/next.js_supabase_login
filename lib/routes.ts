@@ -1,13 +1,26 @@
+"use server";
+
 import { supabase } from "@/lib/supabaseClient";
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const selection = searchParams.get("selection") || "";
-  const pagina = parseInt(searchParams.get("page") || "1");
+interface Employee {
+  id?: string;
+  numero: number;
+  nombre: string;
+  apellido: string;
+  created_at?: string;
+}
+
+interface Crew {
+  id?: string;
+  numero: number;
+  created_at?: string;
+}
+
+export async function GET(page: number, selection: string) {
 
   const { data, error } = await supabase.rpc(selection, {
-    pagina: pagina,
+    pagina: page,
     filas_por_pagina: 4,
   });
 
@@ -28,15 +41,11 @@ export async function GET(request: Request) {
     data: data,
     totalFilas: data[0]?.total_filas || 0,
     pagesTotal: data[0]?.total_paginas || 0,
-    paginaActual: pagina,
+    paginaActual: page,
   });
 }
 
-export async function POST(request: Request) {
-  const info = await request.json();
-  const values = info?.data;
-  const selection = info?.selection;
-
+export async function POST(values: Employee | Crew, selection: string) {
   const { data, error } = await supabase.rpc(selection, values);
 
   if (error) {

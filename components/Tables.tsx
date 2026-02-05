@@ -1,5 +1,7 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { GET, POST } from "@/lib/routes";
 
 interface Employee {
   id: string;
@@ -28,36 +30,26 @@ export default function Tables({ required }: { required: string }) {
     let dataToSend;
     if (required === "employees") {
       dataToSend = {
-        number: Number(formData.get("number")),
-        name: formData.get("name") as string,
-        lastname: formData.get("lastname") as string,
+        numero: Number(formData.get("number")),
+        nombre: formData.get("name") as string,
+        apellido: formData.get("lastname") as string,
       };
     } else if (required === "crews") {
       dataToSend = {
-        number: Number(formData.get("number")),
-        name: formData.get("name") as string,
+        numero: Number(formData.get("number")),
       };
     } else {
       return;
     }
     try {
-      const response = await fetch(`/api/tables`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          data: dataToSend,
-          selection:
-            required === "employees"
-              ? "create_new_empleado"
-              : required === "crews"
-                ? "create_new_cuadrilla"
-                : "",
-        }),
-      });
-      if (response.ok) {
+      const selection =
+        required === "employees"
+          ? "create_new_empleado"
+          : required === "crews"
+            ? "create_new_cuadrilla"
+            : "";
+      const response = await POST(dataToSend, selection);
+      if (response) {
         const nuevo: Employee | Crew = await response.json();
         setVisibility(false);
         setArray([...array, nuevo]);
@@ -73,24 +65,17 @@ export default function Tables({ required }: { required: string }) {
       setLoading(true);
 
       try {
-        const response = await fetch(
-          `/api/tables?page=${actualPage}&selection=${
-            required === "employees"
-              ? "get_empleados_paginados"
-              : required === "crews"
-                ? "get_cuadrillas_paginadas"
-                : ""
-          }`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
+        const response = await GET(
+          actualPage,
+          required === "employees"
+            ? "get_empleados_paginados"
+            : required === "crews"
+              ? "get_cuadrillas_paginadas"
+              : "",
         );
         const result = await response.json();
 
-        if (result && result.data) {
+        if (result) {
           setArray(result.data);
           setPagesTotal(result.pagesTotal);
         }
