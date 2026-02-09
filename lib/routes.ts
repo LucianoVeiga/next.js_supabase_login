@@ -16,80 +16,102 @@ interface Crew {
   created_at?: string;
 }
 
-export async function getEmployees(page: number) {
+const FILAS_POR_PAGINA = 4;
 
-  const { data, error } = await supabase.rpc("get_empleados_paginados", {
-    pagina: page,
-    filas_por_pagina: 4,
-  });
+export async function getEmployees(page: number) {
+  const pagina = page || 1;
+
+  const from = (pagina - 1) * FILAS_POR_PAGINA;
+  const to = from + FILAS_POR_PAGINA - 1;
+
+  const { data, error, count } = await supabase
+    .from("empleados")
+    .select("id, numero, nombre, apellido", { count: "exact" })
+    .order("nombre", { ascending: true })
+    .range(from, to);
+
+  const totalFilas = count ?? 0;
+  const pagesTotal = Math.ceil(totalFilas / FILAS_POR_PAGINA);
 
   if (error) {
     console.error("Error: ", error);
-    return ({ error: error.message, status: 500 });
+    return { error: error.message, status: 500 };
   }
 
-  console.log(
-    "Empleados recibidos: " + JSON.stringify(data),
-  );
+  console.log("Empleados recibidos: " + JSON.stringify(data));
 
-  return ({
+  return {
     data: data,
-    totalFilas: data[0]?.total_filas || 0,
-    pagesTotal: data[0]?.total_paginas || 0,
-    paginaActual: page,
-  });
+    totalFilas: totalFilas || 0,
+    pagesTotal: pagesTotal || 0,
+    paginaActual: pagina,
+  };
 }
 
 export async function getCrews(page: number) {
+  const pagina = page || 1;
 
-  const { data, error } = await supabase.rpc("get_cuadrillas_paginadas", {
-    pagina: page,
-    filas_por_pagina: 4,
-  });
+  const from = (pagina - 1) * FILAS_POR_PAGINA;
+  const to = from + FILAS_POR_PAGINA - 1;
+
+  const { data, error, count } = await supabase
+    .from("cuadrillas")
+    .select("id, numero", { count: "exact" })
+    .order("numero", { ascending: true })
+    .range(from, to);
+
+  const totalFilas = count ?? 0;
+  const pagesTotal = Math.ceil(totalFilas / FILAS_POR_PAGINA);
 
   if (error) {
     console.error("Error: ", error);
-    return ({ error: error.message, status: 500 });
+    return { error: error.message, status: 500 };
   }
 
-  console.log(
-    "Cuadrillas recibidos: " + JSON.stringify(data),
-  );
+  console.log("Cuadrillas recibidas: " + JSON.stringify(data));
 
-  return ({
+  return {
     data: data,
-    totalFilas: data[0]?.total_filas || 0,
-    pagesTotal: data[0]?.total_paginas || 0,
-    paginaActual: page,
-  });
+    totalFilas: totalFilas || 0,
+    pagesTotal: pagesTotal || 0,
+    paginaActual: pagina,
+  };
 }
 
 export async function postEmployee(values: Employee) {
-  const { data, error } = await supabase.rpc("create_new_employee", values);
-  
+  const newEmployee = values;
+  const { data, error } = await supabase
+    .from("empleados")
+    .insert(newEmployee)
+    .select()
+    .order("nombre", { ascending: true })
+    .single();
+
   if (error) {
     console.log("Error: " + error);
-    return ({ error: error, status: 500 });
+	throw new Error(error.message || "Error al crear empleado");
   }
 
-  console.log(
-    "Empleado creado: " + JSON.stringify(data),
-  );
+  console.log("Empleado creado: " + JSON.stringify(data));
 
   return data;
 }
 
 export async function postCrew(values: Crew) {
-  const { data, error } = await supabase.rpc("create_new_cuadrilla", values);
-  
+  const newCrew = values;
+  const { data, error } = await supabase
+    .from("cuardillas")
+    .insert(newCrew)
+    .select()
+    .order("numero", { ascending: true })
+    .single();
+
   if (error) {
     console.log("Error: " + error);
-    return ({ error: error, status: 500 });
+	throw new Error(error.message || "Error al crear cuadrilla");
   }
 
-  console.log(
-    "Cuadrilla creada: " + JSON.stringify(data),
-  );
+  console.log("Cuadrilla creada: " + JSON.stringify(data));
 
   return data;
 }
