@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_ROUTES = ['/login']
-const INACTIVITY_LIMIT = 60 * 1001 * 15 // 15 minutos
+const INACTIVITY_LIMIT = 60 * 1001 // 1
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

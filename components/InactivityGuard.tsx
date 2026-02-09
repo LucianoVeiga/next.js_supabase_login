@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/app/utils/supabase/client"
 
-const INACTIVITY_LIMIT = 60 * 1001 * 15 // 15 minutos
+const INACTIVITY_LIMIT = 60 * 1001
 
 export default function InactivityGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
