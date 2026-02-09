@@ -1,4 +1,5 @@
 import { createClient } from "@/app/utils/supabase/server";
+import LogoutButton from "@/components/LogoutButton";
 import { redirect } from "next/navigation";
 
 export default async function Dashboard() {
@@ -14,6 +15,8 @@ export default async function Dashboard() {
     <div>
       <h1>Dashboard</h1>
       <hr />
+      <p>Bienvenido, {user.email}</p>
+      <LogoutButton />
     </div>
   );
 }
