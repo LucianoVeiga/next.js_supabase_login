@@ -1,4 +1,4 @@
-import Tables from "@/components/Tables";
+import EmployeesTable from "@/components/EmployeesTable";
 import { createClient } from "@/app/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -14,7 +14,7 @@ export default async function Dashboard() {
     <div>
       <h1>Empleados</h1>
       <hr />
-      <Tables required={"employees"} />
+      <EmployeesTable />
       <hr />
     </div>
   );

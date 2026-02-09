@@ -1,7 +1,6 @@
 "use server";
 
 import { supabase } from "@/lib/supabaseClient";
-import { NextResponse } from "next/server";
 
 interface Employee {
   id?: string;
@@ -17,27 +16,23 @@ interface Crew {
   created_at?: string;
 }
 
-export async function GET(page: number, selection: string) {
+export async function getEmployees(page: number) {
 
-  const { data, error } = await supabase.rpc(selection, {
+  const { data, error } = await supabase.rpc("get_empleados_paginados", {
     pagina: page,
     filas_por_pagina: 4,
   });
 
   if (error) {
     console.error("Error: ", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return ({ error: error.message, status: 500 });
   }
 
   console.log(
-    (selection === "get_empleados_paginados"
-      ? "Empleados recibidos: "
-      : selection === "get_cuadrillas_paginadas"
-        ? "Cuadrillas recibidas: "
-        : null) + JSON.stringify(data),
+    "Empleados recibidos: " + JSON.stringify(data),
   );
 
-  return NextResponse.json({
+  return ({
     data: data,
     totalFilas: data[0]?.total_filas || 0,
     pagesTotal: data[0]?.total_paginas || 0,
@@ -45,21 +40,56 @@ export async function GET(page: number, selection: string) {
   });
 }
 
-export async function POST(values: Employee | Crew, selection: string) {
-  const { data, error } = await supabase.rpc(selection, values);
+export async function getCrews(page: number) {
+
+  const { data, error } = await supabase.rpc("get_cuadrillas_paginadas", {
+    pagina: page,
+    filas_por_pagina: 4,
+  });
 
   if (error) {
-    console.log("Error: " + error);
-    return NextResponse.json({ error: error }, { status: 500 });
+    console.error("Error: ", error);
+    return ({ error: error.message, status: 500 });
   }
 
   console.log(
-    (selection === "get_empleados_paginados"
-      ? "Empleado creado: "
-      : selection === "get_cuadrillas_paginadas"
-        ? "Cuadrilla creada: "
-        : null) + JSON.stringify(data),
+    "Cuadrillas recibidos: " + JSON.stringify(data),
   );
 
-  return NextResponse.json(data);
+  return ({
+    data: data,
+    totalFilas: data[0]?.total_filas || 0,
+    pagesTotal: data[0]?.total_paginas || 0,
+    paginaActual: page,
+  });
+}
+
+export async function postEmployee(values: Employee) {
+  const { data, error } = await supabase.rpc("create_new_employee", values);
+  
+  if (error) {
+    console.log("Error: " + error);
+    return ({ error: error, status: 500 });
+  }
+
+  console.log(
+    "Empleado creado: " + JSON.stringify(data),
+  );
+
+  return data;
+}
+
+export async function postCrew(values: Crew) {
+  const { data, error } = await supabase.rpc("create_new_cuadrilla", values);
+  
+  if (error) {
+    console.log("Error: " + error);
+    return ({ error: error, status: 500 });
+  }
+
+  console.log(
+    "Cuadrilla creada: " + JSON.stringify(data),
+  );
+
+  return data;
 }
