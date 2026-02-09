@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { GET, POST } from "@/lib/routes";
+import { getEmployees, postEmployee } from "@/lib/routes";
 
 interface Employee {
   id: string;
@@ -11,12 +11,13 @@ interface Employee {
   created_at?: string;
 }
 
-export default function Tables() {
+export default function EmployeesTable() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [actualPage, setActualPage] = useState(1);
   const [pagesTotal, setPagesTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState(false);
+  const [error, setError] = useState("");
 
   async function createRow(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,13 +29,18 @@ export default function Tables() {
       apellido: formData.get("lastname") as string,
     };
     try {
-      const response = await POST(dataToSend, "create_new_empleado");
+      const response = await postEmployee(dataToSend);
       if (response) {
         const nuevo: Employee = await response;
-        setVisibility(false);
         setEmployees([...employees, nuevo]);
+		setVisibility(false);
+		setError("");
       }
-    } catch (error) {
+
+    } catch (e) {
+      const errorMessage =
+        e instanceof Error ? e.message : "Ocurrio un error inesperado";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -45,10 +51,10 @@ export default function Tables() {
       setLoading(true);
 
       try {
-        const response = await GET(actualPage, "get_empleados_paginados");
+        const response = await getEmployees(actualPage);
         const result = await response;
 
-        if (result) {
+        if (result?.data && result?.pagesTotal) {
           setEmployees(result.data);
           setPagesTotal(result.pagesTotal);
         }
@@ -62,14 +68,14 @@ export default function Tables() {
     loadEmployees();
   }, [actualPage]);
 
-  if (loading) return <div>Cargando...</div>;
-
   return (
     <div>
       <table>
         <thead>
           <tr>
             <th>Número</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +83,8 @@ export default function Tables() {
             employees.map((i) => (
               <tr key={i.id}>
                 <td>{i.numero}</td>
+                <td>{i.nombre}</td>
+                <td>{i.apellido}</td>
               </tr>
             ))
           ) : (
@@ -106,12 +114,16 @@ export default function Tables() {
       </div>
       <button onClick={() => setVisibility(!visibility)}>Crear empleado</button>
       {visibility ? (
-        <form onSubmit={createRow}>
-          <input name="number" placeholder="numero" />
-          <input name="name" placeholder="nombre" />
-          <input name="lastname" placeholder="apellido" />
-          <button type="submit">Crear</button>
-        </form>
+        <div>
+          <form onSubmit={createRow}>
+            <input name="number" placeholder="numero" />
+            <input name="name" placeholder="nombre" />
+            <input name="lastname" placeholder="apellido" />
+            <button type="submit">Crear</button>
+          </form>
+          {loading ? <div>Cargando...</div> : null}
+          <p>{error}</p>
+        </div>
       ) : null}
     </div>
   );
