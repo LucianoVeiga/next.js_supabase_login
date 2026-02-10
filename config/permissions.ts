@@ -1,5 +1,3 @@
-// config/permissions.ts
-
 export const ROLES = ["admin", "supervisor"] as const
 export type Role = (typeof ROLES)[number]
 
@@ -15,6 +13,28 @@ export const STATUS_LABELS: Record<number, string> = {
   3: "Verificada",
 }
 
+// --- Navegación por rol ---
+export type NavItem = {
+  label: string
+  href: string
+}
+
+export const NAV_ITEMS: Record<Role, NavItem[]> = {
+  admin: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Órdenes de trabajo", href: "/work_orders" },
+    { label: "Cuadrillas", href: "/cuadrillas" },
+    { label: "Empleados", href: "/employees" },
+    { label: "Usuarios", href: "/users" },
+  ],
+  supervisor: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Órdenes de trabajo", href: "/work_orders" },
+    { label: "Cuadrillas", href: "/cuadrillas" },
+  ],
+}
+
+// --- Permisos por recurso ---
 export const PERMISSIONS = {
   employees: {
     view: ["admin", "supervisor"],
@@ -30,10 +50,18 @@ export const PERMISSIONS = {
     delete: ["admin"],
     detail: ["admin", "supervisor"],
     advance: {
-      supervisor: { from: 1, to: 2 },  // abierta → realizada
-      admin: { from: 2, to: 3 },        // realizada → verificada
+      supervisor: { from: 1, to: 2 },
+      admin: { from: 2, to: 3 },
     },
   },
+
+  // cuadrillas: {
+  //   view: ["admin", "supervisor"],
+  //   create: ["admin"],
+  //   edit: ["admin", "supervisor"],
+  //   delete: ["admin"],
+  //   assign_members: ["admin"],
+  // },
 
   reports: {
     view: ["admin"],
@@ -74,4 +102,9 @@ export function canAdvance(
 export function getNextStatusLabel(currentStatus: number): string | null {
   const next = currentStatus + 1
   return STATUS_LABELS[next] ?? null
+}
+
+export function getNavItems(role: Role | null): NavItem[] {
+  if (!role) return []
+  return NAV_ITEMS[role] ?? []
 }

@@ -1,11 +1,28 @@
-import Link from "next/link";
+"use client"
 
-export default function NavBar() {
-	return(
-		<aside className="aside">
-			<Link href="/employees">Empleados
-			</Link>
-			<hr />
-		</aside>
-	)
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useRole } from "@/hooks/useRole"
+import { getNavItems } from "@/config/permissions"
+
+export default function Navbar() {
+  const { role, loading } = useRole()
+  const pathname = usePathname()
+  const items = getNavItems(role)
+
+  if (loading) return null
+
+  return (
+    <nav>
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={pathname === item.href ? "active" : ""}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  )
 }
