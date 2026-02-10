@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getEmployees, postEmployee } from "@/lib/routes";
+import EditEmployee from "./EditEmployee";
 
 interface Employee {
   id: string;
@@ -18,6 +19,7 @@ export default function EmployeesTable() {
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState(false);
   const [error, setError] = useState("");
+  const [panelVisibility, setPanelVisibility] = useState(-1);
 
   async function createRow(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -33,10 +35,9 @@ export default function EmployeesTable() {
       if (response) {
         const nuevo: Employee = await response;
         setEmployees([...employees, nuevo]);
-		setVisibility(false);
-		setError("");
+        setVisibility(false);
+        setError("");
       }
-
     } catch (e) {
       const errorMessage =
         e instanceof Error ? e.message : "Ocurrio un error inesperado";
@@ -68,6 +69,19 @@ export default function EmployeesTable() {
     loadEmployees();
   }, [actualPage]);
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = (numero: number) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setPanelVisibility(numero);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setPanelVisibility(-1);
+    }, 1000);
+  };
+
   return (
     <div>
       <table>
@@ -81,10 +95,23 @@ export default function EmployeesTable() {
         <tbody>
           {employees && employees.length > 0 ? (
             employees.map((i) => (
-              <tr key={i.id}>
+              <tr
+                key={i.id}
+                onMouseEnter={() => handleMouseEnter(Number(i.numero))}
+                onMouseLeave={handleMouseLeave}
+              >
                 <td>{i.numero}</td>
                 <td>{i.nombre}</td>
                 <td>{i.apellido}</td>
+                {panelVisibility === Number(i.numero) ? (
+                  <td
+                    onMouseLeave={() => {
+                      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+                    }}
+                  >
+                    <EditEmployee employee={i} crew={5} />
+                  </td>
+                ) : null}
               </tr>
             ))
           ) : (
