@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const PUBLIC_ROUTES = ['/login']
-const INACTIVITY_LIMIT = 60 * 1001 * 60 // 1 hora
+const VALID_ROLES = ['admin', 'supervisor']
+const INACTIVITY_LIMIT = 5 * 60 * 1000
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -35,22 +36,21 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  // 1. Chequeo de inactividad PRIMERO
+  // 1. Inactividad
   if (user) {
     const lastActivity = request.cookies.get('last_activity')?.value
     const now = Date.now()
 
     if (lastActivity && now - parseInt(lastActivity) > INACTIVITY_LIMIT) {
       await supabase.auth.signOut()
-
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       const response = NextResponse.redirect(url)
       response.cookies.delete('last_activity')
+      response.cookies.delete('user_role')
       return response
     }
 
-    // Actualizar timestamp de actividad
     supabaseResponse.cookies.set('last_activity', now.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -59,18 +59,32 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  // 2. No logueado + ruta protegida → login
+  // 2. No logueado → login
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // 3. Logueado + va al login → dashboard
+  // 3. Ya logueado → dashboard
   if (user && isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
+  }
+
+  // 4. Logueado pero sin rol válido → cerrar sesión
+  if (user && !isPublic) {
+    const role = request.cookies.get('user_role')?.value
+
+    if (!role || !VALID_ROLES.includes(role)) {
+      await supabase.auth.signOut()
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      const response = NextResponse.redirect(url)
+      response.cookies.delete('user_role')
+      return response
+    }
   }
 
   return supabaseResponse

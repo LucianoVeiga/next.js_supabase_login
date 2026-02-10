@@ -1,4 +1,3 @@
-// components/LogoutButton.tsx
 "use client"
 
 import { createClient } from "@/app/utils/supabase/client"
@@ -10,6 +9,8 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
+    document.cookie = "user_role=; path=/; max-age=0"
+    document.cookie = "last_activity=; path=/; max-age=0"
     router.push("/login")
   }
 

@@ -36,25 +36,39 @@ export default function LoginForm() {
   };
 
   const verifyOtp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
 
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: code,
       type: "email",
-    });
-
-    setLoading(false);
+    })
 
     if (error) {
-      setError("Código inválido o expirado.");
-      return;
+      setLoading(false)
+      setError("Código inválido o expirado.")
+      return
     }
 
     if (data.session) {
-      router.push("/dashboard");
+      const { data: userData } = await supabase
+        .from("users")
+        .select("rol")
+        .eq("id", data.session.user.id)
+        .single()
+
+      // Si no existe en la tabla o no tiene rol válido
+      if (!userData?.rol || !["admin", "supervisor"].includes(userData.rol)) {
+        await supabase.auth.signOut()
+        setLoading(false)
+        setError("Este usuario no tiene permisos para acceder al sistema.")
+        return
+      }
+
+      document.cookie = `user_role=${userData.rol}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`
+      router.push("/dashboard")
     }
   };
   return (
