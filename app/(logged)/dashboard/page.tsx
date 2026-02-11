@@ -2,6 +2,7 @@ import { createClient } from "@/app/utils/supabase/server"
 import { redirect } from "next/navigation"
 import AdminDashboard from "@/components/AdminDashboard"
 import SupervisorDashboard from "@/components/SupervisorDashboard"
+import CSVImporter from "@/components/CSVImporter"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
 
   if (data.rol === "admin") return <AdminDashboard />
   if (data.rol === "supervisor") return <SupervisorDashboard />
+  if (data.rol === "supremo") return <CSVImporter />
 
   redirect("/login")
 }

@@ -1,4 +1,4 @@
-export const ROLES = ["admin", "supervisor"] as const
+export const ROLES = ["supremo", "admin", "supervisor"] as const
 export type Role = (typeof ROLES)[number]
 
 export const STATUS = {
@@ -20,6 +20,14 @@ export type NavItem = {
 }
 
 export const NAV_ITEMS: Record<Role, NavItem[]> = {
+  supremo: [
+    { label: "Dashboard", href: "/dashboard" },
+    { label: "Órdenes de trabajo", href: "/work_orders" },
+    { label: "Cuadrillas", href: "/cuadrillas" },
+    { label: "Empleados", href: "/employees" },
+    { label: "Usuarios", href: "/users" },
+    { label: "Importar", href: "/import" },
+  ],
   admin: [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Órdenes de trabajo", href: "/work_orders" },
@@ -37,40 +45,32 @@ export const NAV_ITEMS: Record<Role, NavItem[]> = {
 // --- Permisos por recurso ---
 export const PERMISSIONS = {
   employees: {
-    view: ["admin", "supervisor"],
-    create: ["admin"],
-    edit: ["admin"],
-    delete: ["admin"],
+    view: ["supremo", "admin", "supervisor"],
+    create: ["supremo", "admin"],
+    edit: ["supremo", "admin"],
+    delete: ["supremo", "admin"],
   },
 
   work_orders: {
-    view: ["admin", "supervisor"],
-    create: ["admin"],
-    edit: ["admin"],
-    delete: ["admin"],
-    detail: ["admin", "supervisor"],
+    view: ["supremo", "admin", "supervisor"],
+    create: ["supremo", "admin"],
+    edit: ["supremo", "admin"],
+    delete: ["supremo", "admin"],
+    detail: ["supremo", "admin", "supervisor"],
     advance: {
       supervisor: { from: 1, to: 2 },
       admin: { from: 2, to: 3 },
     },
   },
 
-  // cuadrillas: {
-  //   view: ["admin", "supervisor"],
-  //   create: ["admin"],
-  //   edit: ["admin", "supervisor"],
-  //   delete: ["admin"],
-  //   assign_members: ["admin"],
-  // },
-
   reports: {
-    view: ["admin"],
-    export: ["admin"],
+    view: ["supremo", "admin"],
+    export: ["supremo", "admin"],
   },
 
   user_management: {
-    view: ["admin"],
-    assign_roles: ["admin"],
+    view: ["supremo", "admin"],
+    assign_roles: ["supremo", "admin"],
   },
 } as const
 
@@ -82,9 +82,13 @@ export function can(
   action: string
 ): boolean {
   if (!role) return false
+
+  if (role === "supremo") return true
+
   const resourcePerms = PERMISSIONS[resource]
   const actionPerms = (resourcePerms as any)[action]
   if (!actionPerms) return false
+
   if (Array.isArray(actionPerms)) return actionPerms.includes(role)
   return role in actionPerms
 }
@@ -94,6 +98,8 @@ export function canAdvance(
   currentStatus: number
 ): boolean {
   if (!role) return false
+  if (role === "supremo") return true
+
   const advance = (PERMISSIONS.work_orders.advance as any)[role]
   if (!advance) return false
   return advance.from === currentStatus
