@@ -28,12 +28,25 @@ body {
 .editform{
 	display: flex;
 	flex-direction: column;
-	border: 2px solid black;
+	position: fixed;
+	background-color: white;
     border-radius: 4px;
-    margin-left: 50px;
-    display: block;
-	position:fixed;
 	padding: 1rem;
+	top: 0;
+    right: 0;
+    height: 100%;
+	z-index: 100;
+}
+
+.overlay {
+	opacity: 80%;
+	position: fixed;
+	background-color: black;
+	top:0;
+	left:0;
+	height: 100%;
+	width: 100%;
+	z-index: 50;
 }
 
 input, select {
@@ -48,4 +61,17 @@ input, select {
 	border-radius: 4px;
 	padding: 0.5rem;
 	margin: 0.2rem;
+}
+
+.aside {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
 }

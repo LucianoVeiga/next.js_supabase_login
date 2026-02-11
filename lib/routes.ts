@@ -43,20 +43,39 @@ export async function getEmployees(page: number) {
 }
 
 export async function postEmployee(values: Employee) {
-  const newEmployee = values;
   const { data, error } = await supabase
     .from("empleados")
-    .insert(newEmployee)
+    .insert(values)
     .select()
     .order("nombre", { ascending: true })
     .single();
 
   if (error) {
     console.log("Error: " + error);
-	throw new Error(error.message || "Error al crear empleado");
+    throw new Error(error.message || "Error al crear empleado");
   }
 
   console.log("Empleado creado: " + JSON.stringify(data));
 
   return data;
+}
+
+export async function updateEmployee(employeeId: string, newInfo: Employee) {
+  const { data, error } = await supabase
+    .from("empleados")
+    .update({
+      "numero": newInfo.numero,
+      "nombre": newInfo.nombre,
+      "apellido": newInfo.apellido,
+    })
+    .eq("id", employeeId);
+
+  if (error) {
+    console.log("Error: " + error);
+    throw new Error(error.message || "Error al actualizar empleado");
+  }
+
+  console.log("Empleado actualizado: " + JSON.stringify(data));
+
+  return true;
 }

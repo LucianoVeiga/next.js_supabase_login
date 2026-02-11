@@ -19,7 +19,12 @@ export default function EmployeesTable() {
   const [loading, setLoading] = useState(false);
   const [visibility, setVisibility] = useState(false);
   const [error, setError] = useState("");
-  const [panelVisibility, setPanelVisibility] = useState(-1);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee>({
+    id: "",
+    numero: -1,
+    nombre: "",
+    apellido: "",
+  });
 
   async function createRow(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,6 +52,18 @@ export default function EmployeesTable() {
     }
   }
 
+  function handleOpen(i: Employee) {
+    setSelectedEmployee(i);
+  }
+  function handleClose() {
+    setSelectedEmployee({
+      id: "",
+      numero: -1,
+      nombre: "",
+      apellido: "",
+    });
+  }
+
   useEffect(() => {
     async function loadEmployees() {
       setLoading(true);
@@ -69,19 +86,6 @@ export default function EmployeesTable() {
     loadEmployees();
   }, [actualPage]);
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleMouseEnter = (numero: number) => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    setPanelVisibility(numero);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setPanelVisibility(-1);
-    }, 1000);
-  };
-
   return (
     <div>
       <table>
@@ -95,23 +99,13 @@ export default function EmployeesTable() {
         <tbody>
           {employees && employees.length > 0 ? (
             employees.map((i) => (
-              <tr
-                key={i.id}
-                onMouseEnter={() => handleMouseEnter(Number(i.numero))}
-                onMouseLeave={handleMouseLeave}
-              >
+              <tr key={i.id}>
                 <td>{i.numero}</td>
                 <td>{i.nombre}</td>
                 <td>{i.apellido}</td>
-                {panelVisibility === Number(i.numero) ? (
-                  <td
-                    onMouseLeave={() => {
-                      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-                    }}
-                  >
-                    <EditEmployee employee={i} crew={5} />
-                  </td>
-                ) : null}
+                <td>
+                  <button onClick={(e) => handleOpen(i)}>Editar</button>
+                </td>
               </tr>
             ))
           ) : (
@@ -152,6 +146,15 @@ export default function EmployeesTable() {
           <p>{error}</p>
         </div>
       ) : null}
+      <div>
+        {selectedEmployee?.numero !== -1 ? (
+          <EditEmployee
+            employee={selectedEmployee}
+            setEmployees={setEmployees}
+            handleClose={handleClose}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
