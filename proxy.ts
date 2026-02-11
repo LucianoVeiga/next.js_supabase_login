@@ -6,7 +6,7 @@ const PUBLIC_ROUTES = ['/login']
 const VALID_ROLES = ['admin', 'supervisor']
 const INACTIVITY_LIMIT = 5 * 60 * 1000
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -30,11 +30,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
   const isPublic = PUBLIC_ROUTES.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
+
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  // Token inválido en ruta protegida → limpiar y al login
+  if (error && !isPublic) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    const response = NextResponse.redirect(url)
+    response.cookies.delete('user_role')
+    response.cookies.delete('last_activity')
+    return response
+  }
 
   // 1. Inactividad
   if (user) {
@@ -92,6 +102,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.ico$|api).*)',
   ],
 }
